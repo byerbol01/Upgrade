@@ -1,0 +1,43 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing and scripts
+/coverage
+test-*.js
+
+# Next.js build output
+/.next/
+/out/
+tsconfig.tsbuildinfo
+
+# Production build
+/build
+
+# Local environment variables & secrets (NEVER commit secrets!)
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Prisma local database files
+*.db
+*.db-journal
+dev.db
+dev.db-journal
+prisma/*.db
+prisma/*.db-journal
+
+# Vercel deployment cache
+.vercel
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Legacy static project backup (keep local only)
+backup_original/

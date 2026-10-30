@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  phone     String?
+  address   String?
+  role      String   @default("USER") // "USER" | "ADMIN"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders    Order[]
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  title        String
+  slug         String   @unique
+  description  String?
+  price        Int
+  oldPrice     Int?
+  category     String   // "monitors" | "laptops" | "gaming-pc" | "keyboards" | "mice" | "accessories" | "components"
+  brand        String
+  inStock      Boolean  @default(true)
+  stockCount   Int      @default(10)
+  rating       Float    @default(5.0)
+  reviewsCount Int      @default(0)
+  image        String
+  images       String   @default("[]") // JSON string of image URLs
+  specs        String   @default("{}") // JSON string of key-value specs
+  featured     Boolean  @default(false)
+  isNew        Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  orderNumber    String      @unique
+  userId         String?
+  user           User?       @relation(fields: [userId], references: [id])
+  customerName   String
+  customerEmail  String
+  customerPhone  String
+  city           String
+  address        String
+  deliveryNotes  String?
+  deliveryMethod String      @default("STANDARD") // "STANDARD" | "EXPRESS" | "PICKUP"
+  paymentMethod  String      @default("COD")      // "COD" | "CARD" | "PAYME" | "CLICK"
+  paymentStatus  String      @default("PENDING")  // "PENDING" | "PAID"
+  status         String      @default("PENDING")  // "PENDING" | "PROCESSING" | "SHIPPED" | "COMPLETED" | "CANCELLED"
+  totalAmount    Int
+  itemsJson      String      // JSON array of cart items
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model PCComponent {
+  id          String   @id @default(cuid())
+  type        String   // "cpu" | "motherboard" | "ram" | "gpu" | "ssd" | "psu" | "case"
+  name        String
+  price       Int
+  image       String?
+  brand       String
+  socket      String?  // e.g. "LGA1700", "AM5", "AM4"
+  ramType     String?  // e.g. "DDR4", "DDR5"
+  powerUsage  Int?     // in Watts
+  wattage     Int?     // For PSU: rated wattage
+  capacity    String?  // e.g. "16GB (2x8GB)", "1TB", "850W"
+  inStock     Boolean  @default(true)
+}
