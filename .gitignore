@@ -5,7 +5,7 @@
 
 # Testing and scripts
 /coverage
-test-*.js
+
 
 # Next.js build output
 /.next/

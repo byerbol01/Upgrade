@@ -6,43 +6,31 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding Upgrade database...');
 
-  // 1. Create or update Admin & User
-  const adminPassword = await bcrypt.hash('admin12345password', 10);
-  const userPassword = await bcrypt.hash('user12345password', 10);
+  // 1. Create Admin user if ADMIN_PASSWORD environment variable is provided
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@upgrade.uz';
+  const adminRawPassword = process.env.ADMIN_PASSWORD;
 
-  const admin = await prisma.user.upsert({
-    where: { email: 'admin@upgrade.uz' },
-    update: {
-      password: adminPassword,
-      role: 'ADMIN',
-    },
-    create: {
-      email: 'admin@upgrade.uz',
-      password: adminPassword,
-      name: 'Upgrade Administrator',
-      phone: '+998 99 124-24-24',
-      address: 'г. Ташкент, ул. Навои 37',
-      role: 'ADMIN',
-    },
-  });
-
-  const testUser = await prisma.user.upsert({
-    where: { email: 'user@upgrade.uz' },
-    update: {
-      password: userPassword,
-      role: 'USER',
-    },
-    create: {
-      email: 'user@upgrade.uz',
-      password: userPassword,
-      name: 'Шохрух Тест',
-      phone: '+998 90 987-65-43',
-      address: 'г. Ташкент, Юнусабад 14',
-      role: 'USER',
-    },
-  });
-
-  console.log('Users created:', { admin: admin.email, user: testUser.email });
+  if (adminRawPassword) {
+    const adminPassword = await bcrypt.hash(adminRawPassword, 10);
+    const admin = await prisma.user.upsert({
+      where: { email: adminEmail },
+      update: {
+        password: adminPassword,
+        role: 'ADMIN',
+      },
+      create: {
+        email: adminEmail,
+        password: adminPassword,
+        name: 'Upgrade Administrator',
+        phone: '+998 99 124-24-24',
+        address: 'г. Ташкент, ул. Навои 37',
+        role: 'ADMIN',
+      },
+    });
+    console.log(`Admin user configured for: ${admin.email}`);
+  } else {
+    console.log('Notice: ADMIN_PASSWORD not set in environment. Skipping automatic admin user creation for security.');
+  }
 
   // 2. Clear and seed products
   await prisma.product.deleteMany({});

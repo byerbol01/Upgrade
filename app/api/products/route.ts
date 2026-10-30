@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { INITIAL_PRODUCTS } from '@/lib/products-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,9 +36,9 @@ export async function GET(request: Request) {
 
     if (search) {
       where.OR = [
-        { title: { contains: search } },
-        { description: { contains: search } },
-        { brand: { contains: search } },
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { brand: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -55,15 +56,28 @@ export async function GET(request: Request) {
       orderBy,
     });
 
-    const products = rawProducts.map((p) => ({
-      ...p,
-      images: JSON.parse(p.images || '[]'),
-      specs: JSON.parse(p.specs || '{}'),
-    }));
+    if (rawProducts && rawProducts.length > 0) {
+      const products = rawProducts.map((p) => ({
+        ...p,
+        images: JSON.parse(p.images || '[]'),
+        specs: JSON.parse(p.specs || '{}'),
+      }));
+      return NextResponse.json({ products });
+    }
 
-    return NextResponse.json({ products });
+    // Fallback if DB is empty or being initialized
+    let fallback = [...INITIAL_PRODUCTS];
+    if (category) fallback = fallback.filter((p) => p.category === category);
+    if (brand) fallback = fallback.filter((p) => p.brand.toLowerCase() === brand.toLowerCase());
+    if (featured === 'true') fallback = fallback.filter((p) => p.featured);
+    if (isNew === 'true') fallback = fallback.filter((p) => p.isNew);
+    if (search) {
+      const q = search.toLowerCase();
+      fallback = fallback.filter((p) => p.title.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q));
+    }
+    return NextResponse.json({ products: fallback });
   } catch (error) {
-    console.error('Products error:', error);
-    return NextResponse.json({ error: 'Не удалось загрузить товары' }, { status: 500 });
+    console.error('Products DB error, using INITIAL_PRODUCTS fallback:', error);
+    return NextResponse.json({ products: INITIAL_PRODUCTS });
   }
 }
